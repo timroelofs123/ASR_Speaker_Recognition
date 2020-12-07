@@ -12,5 +12,5 @@ Here is a quick summary of the results:
 | ------------- |:---------------:| -----------------------------:|
 | GMM-UBM model | A. Perez        | 71.7                          |
 | RNN model     | V. Petrutiu     | 74.6                          |
-| CNN model     | T.J.T. Roelofs  | 86.9                          |
+| CNN model     | T.J.T. Roelofs  | 92.3                          |
 
