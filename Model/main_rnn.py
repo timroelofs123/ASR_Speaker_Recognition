@@ -191,7 +191,14 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
     # Training part
+    train_accuracy = []
+    test_accuracy = []
+    train_loss = []
+    test_loss = []
+
     for epoch in range(0, n_epochs):
+
+        model.train()
 
         optimizer.zero_grad()  # Clears existing gradients from previous epoch
         epoch_loss = []  # Store the losses for all batches of an epoch
@@ -220,11 +227,37 @@ def main():
             print("Loss: {:.4f}, Accuracy: {}/{}".format(
                 np.average(epoch_loss), correct_predictions.item(),
                 total_predictions))
+            train_accuracy.append(correct_predictions.item() /
+                                  total_predictions)
+            train_loss.append(np.average(epoch_loss))
 
-    # Evaluate the model on the test set
+            # Evaluate the model on the test set
+            model.eval()
+            correct_predictions = 0
+            total_predictions = 0
+            epoch_val_loss = []
+
+            for i, (x, y) in enumerate(val_dataset):
+                x = Variable(x.view(-1, 20, 100))
+                y = Variable(y)
+                output, _ = model(x)
+                target = torch.argmax(y, dim=1)
+                loss = criterion(output, target)
+                epoch_val_loss.append(loss.item())
+                correct, predicted = compute_accuracy(output, target)
+                correct_predictions += correct
+                total_predictions += predicted
+            print("Eval Accuracy: {}/{}".format(correct_predictions.item(),
+                                                total_predictions))
+            test_accuracy.append(correct_predictions.item() /
+                                 total_predictions)
+            test_loss.append(np.average(epoch_val_loss))
+
     model.eval()
     correct_predictions = 0
     total_predictions = 0
+    preds = []
+    targets = []
 
     for i, (x, y) in enumerate(val_dataset):
         x = Variable(x.view(-1, 20, 100))
@@ -232,10 +265,27 @@ def main():
         output, _ = model(x)
         target = torch.argmax(y, dim=1)
         correct, predicted = compute_accuracy(output, target)
+        preds.append(output)
+        targets.append(target)
         correct_predictions += correct
         total_predictions += predicted
-    print("Eval Accuracy: {}/{}".format(correct_predictions.item(),
-                                        total_predictions))
+    print("Final Eval Accuracy: {}/{}".format(correct_predictions.item(),
+                                              total_predictions))
+
+    with open('accuracy.pickle', 'wb') as f:
+        pickle.dump(train_accuracy, f)
+        pickle.dump(test_accuracy, f)
+    f.close()
+
+    with open('loss.pickle', 'wb') as f:
+        pickle.dump(train_loss, f)
+        pickle.dump(test_loss, f)
+    f.close()
+
+    with open('preds.pickle', 'wb') as f:
+        pickle.dump(preds, f)
+        pickle.dump(targets, f)
+    f.close()
 
 
 main()
